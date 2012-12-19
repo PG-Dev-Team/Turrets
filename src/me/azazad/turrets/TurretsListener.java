@@ -191,10 +191,10 @@ public class TurretsListener implements Listener{
 	                BlockLocation postLocation = new BlockLocation(clickedBlock.getLocation());
 	                if(plugin.canBuildTurret(postLocation)){
 	                	TurretOwner turretOwner = null;
-	                	if(!(plugin.getTurretOwner(player.getName()) == null)) {
+	                	if((turretOwner = plugin.getTurretOwner(player.getName())) == null) {
 	                		turretOwner = new TurretOwner(plugin, player.getName(), plugin.getMaxTurretsPerPlayer(), new HashSet<String>(), new HashSet<String>(), plugin.getConfigMap().get("defaultUseBlacklist"), plugin.getConfigMap().get("defaultPvpOn"));
 	                		plugin.addTurretOwner(player.getName(), turretOwner);
-	                	} else turretOwner = plugin.getTurretOwner(player.getName());
+	                	}
 	                	if((turretOwner.getNumTurretsOwned() < turretOwner.getMaxTurretsAllowed()) || player.hasPermission("turrets.ignoremaxturrets")) {
 	                		Turret turret = new Turret(postLocation,player,plugin,plugin.getConfigMap().get("defaultUseAmmoBox"));
 		                    turretOwner.addTurretOwned(turret);
