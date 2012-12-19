@@ -12,28 +12,28 @@ import me.azazad.turrets.targeting.TargetAssessment;
 import me.azazad.turrets.targeting.TargetAssessor;
 import me.azazad.turrets.upgrade.UpgradeTier;
 import me.azazad.util.RandomUtils;
-import net.minecraft.server.DamageSource;
-import net.minecraft.server.EntityArrow;
-import net.minecraft.server.EntityEgg;
-import net.minecraft.server.EntityHuman;
-import net.minecraft.server.EntityItem;
-import net.minecraft.server.EntityPotion;
-import net.minecraft.server.EntitySmallFireball;
-import net.minecraft.server.EntitySnowball;
-import net.minecraft.server.EntityThrownExpBottle;
-import net.minecraft.server.ItemMonsterEgg;
-import net.minecraft.server.ItemPotion;
-import net.minecraft.server.Vec3D;
+import net.minecraft.server.v1_4_5.DamageSource;
+import net.minecraft.server.v1_4_5.EntityArrow;
+import net.minecraft.server.v1_4_5.EntityEgg;
+import net.minecraft.server.v1_4_5.EntityHuman;
+import net.minecraft.server.v1_4_5.EntityItem;
+import net.minecraft.server.v1_4_5.EntityPotion;
+import net.minecraft.server.v1_4_5.EntitySmallFireball;
+import net.minecraft.server.v1_4_5.EntitySnowball;
+import net.minecraft.server.v1_4_5.EntityThrownExpBottle;
+import net.minecraft.server.v1_4_5.ItemMonsterEgg;
+import net.minecraft.server.v1_4_5.ItemPotion;
+import net.minecraft.server.v1_4_5.Vec3D;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Chest;
-import org.bukkit.craftbukkit.CraftWorld;
-import org.bukkit.craftbukkit.entity.CraftEntity;
-import org.bukkit.craftbukkit.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_4_5.CraftWorld;
+import org.bukkit.craftbukkit.v1_4_5.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_4_5.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_4_5.inventory.CraftItemStack;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -43,7 +43,7 @@ import org.bukkit.potion.Potion;
 import org.bukkit.util.NumberConversions;
 
 @SuppressWarnings("unused")
-public class EntityRotatingTurret extends net.minecraft.server.EntityMinecart{
+public class EntityRotatingTurret extends net.minecraft.server.v1_4_5.EntityMinecart{
     private static final double REBOUND = 0.1;
     private static final double ITEM_SPAWN_DISTANCE = 1.2;
     
@@ -76,7 +76,7 @@ public class EntityRotatingTurret extends net.minecraft.server.EntityMinecart{
     }
     
     public boolean damageEntity(DamageSource damageSource,int damage){
-        net.minecraft.server.Entity nmsDamager = damageSource.getEntity();
+        net.minecraft.server.v1_4_5.Entity nmsDamager = damageSource.getEntity();
         
         if(nmsDamager != null){
             Entity damager = nmsDamager.getBukkitEntity();
@@ -161,10 +161,10 @@ public class EntityRotatingTurret extends net.minecraft.server.EntityMinecart{
 		        
 		        //Track target
 		        if(target != null){
-		            net.minecraft.server.Entity nmsTarget = ((CraftEntity)target).getHandle();
+		            net.minecraft.server.v1_4_5.Entity nmsTarget = ((CraftEntity)target).getHandle();
 		            
 		            if(canSee(nmsTarget)){
-		                net.minecraft.server.World targetWorld = nmsTarget.world;
+		                net.minecraft.server.v1_4_5.World targetWorld = nmsTarget.world;
 		                double x = nmsTarget.locX;
 		                double y = nmsTarget.locY + nmsTarget.getHeadHeight();
 		                double z = nmsTarget.locZ;
@@ -290,10 +290,10 @@ public class EntityRotatingTurret extends net.minecraft.server.EntityMinecart{
     
     @SuppressWarnings("unchecked")
 	public Entity findTarget(double range){
-        List<net.minecraft.server.Entity> nmsEntities = world.getEntities(this,this.boundingBox.grow(range,range,range));
+        List<net.minecraft.server.v1_4_5.Entity> nmsEntities = world.getEntities(this,this.boundingBox.grow(range,range,range));
         List<LivingEntity> targets = new ArrayList<LivingEntity>();
         double rangeSquared = range * range;
-        for(net.minecraft.server.Entity nmsEntity : nmsEntities){
+        for(net.minecraft.server.v1_4_5.Entity nmsEntity : nmsEntities){
             if(nmsEntity == this){
                 continue;
             }
@@ -319,7 +319,7 @@ public class EntityRotatingTurret extends net.minecraft.server.EntityMinecart{
         
         while(!targets.isEmpty()){
             LivingEntity possibleTarget = RandomUtils.randomElement(targets,random);
-            net.minecraft.server.Entity nmsPossibleTarget = ((CraftEntity)possibleTarget).getHandle();
+            net.minecraft.server.v1_4_5.Entity nmsPossibleTarget = ((CraftEntity)possibleTarget).getHandle();
             
             if(canSee(nmsPossibleTarget)){
                 return possibleTarget;
@@ -468,8 +468,8 @@ public class EntityRotatingTurret extends net.minecraft.server.EntityMinecart{
                     
                 case POTION:
                     if(Potion.fromItemStack(itemStack).isSplash()){
-                    	ItemPotion nmsItemPotion = new net.minecraft.server.ItemPotion(itemStack.getDurability());
-                    	net.minecraft.server.ItemStack nmsItemStack = new net.minecraft.server.ItemStack(nmsItemPotion);
+                    	ItemPotion nmsItemPotion = new net.minecraft.server.v1_4_5.ItemPotion(itemStack.getDurability());
+                    	net.minecraft.server.v1_4_5.ItemStack nmsItemStack = new net.minecraft.server.v1_4_5.ItemStack(nmsItemPotion);
                         EntityPotion entityPotion = new EntityPotion(world,itemX,itemY,itemZ,nmsItemStack);
                         entityPotion.shoot(factorX,factorY,factorZ,1.375f,accuracy * 0.5f);
                         world.addEntity(entityPotion);
@@ -530,7 +530,7 @@ public class EntityRotatingTurret extends net.minecraft.server.EntityMinecart{
         int blockY = NumberConversions.floor(this.locY);
         int blockZ = NumberConversions.floor(this.locZ);
         
-        EntityItem entityItem = new EntityItem(world,itemX,itemY,itemZ,CraftItemStack.createNMSItemStack(itemStack));
+        EntityItem entityItem = new EntityItem(world,itemX,itemY,itemZ,CraftItemStack.asNMSCopy(itemStack));
         entityItem.motX = itemMotX;
         entityItem.motY = itemMotY;
         entityItem.motZ = itemMotZ;
@@ -539,7 +539,7 @@ public class EntityRotatingTurret extends net.minecraft.server.EntityMinecart{
     }
     
     //TODO: cache results of this method
-    private boolean canSee(net.minecraft.server.Entity nmsEntity){
+    private boolean canSee(net.minecraft.server.v1_4_5.Entity nmsEntity){
         return this.world.rayTrace(Vec3D.a(this.locX,this.locY + this.getHeadHeight(),this.locZ),Vec3D.a(nmsEntity.locX,nmsEntity.locY + nmsEntity.getHeadHeight(),nmsEntity.locZ),false,false) == null;
     }
     
