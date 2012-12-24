@@ -1,10 +1,10 @@
 package me.azazad.turrets.nms;
 
-import net.minecraft.server.v1_4_5.Entity;
-import net.minecraft.server.v1_4_5.EntityArrow;
-import net.minecraft.server.v1_4_5.EntityLiving;
-import net.minecraft.server.v1_4_5.MathHelper;
-import net.minecraft.server.v1_4_5.World;
+import net.minecraft.server.v1_4_6.Entity;
+import net.minecraft.server.v1_4_6.EntityArrow;
+import net.minecraft.server.v1_4_6.EntityLiving;
+import net.minecraft.server.v1_4_6.MathHelper;
+import net.minecraft.server.v1_4_6.World;
 
 public class EntityHomingArrow extends EntityArrow{
 	
