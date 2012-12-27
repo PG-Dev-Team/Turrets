@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import me.azazad.bukkit.util.BlockLocation;
 import me.azazad.bukkit.util.PlayerCommandSender;
+import me.azazad.stats.BukkitMetrics;
 import me.azazad.turrets.persistence.TurretDatabase;
 import me.azazad.turrets.persistence.YAMLTurretDatabase;
 import me.azazad.turrets.targeting.MobAssessor;
@@ -56,7 +57,7 @@ public class TurretsPlugin extends JavaPlugin{
     
     public Set<String> globalWhitelist;
     
-    public static Logger globalLogger;
+    public static Logger logger;
     private Map<String,Boolean> booleanConfigMap = new HashMap<String,Boolean>();
     
     public PluginDescriptionFile pdf;
@@ -77,6 +78,8 @@ public class TurretsPlugin extends JavaPlugin{
     
     @Override
     public void onLoad(){
+    	logger = getLogger();
+    	
         //TODO: check to make sure that the server is CraftBukkit
     	
         pdf = getDescription();
@@ -86,8 +89,6 @@ public class TurretsPlugin extends JavaPlugin{
     
     @Override
     public void onEnable(){
-    	globalLogger = getLogger();
-        Logger logger = getLogger();
         Server server = getServer();
         PluginManager pluginManager = server.getPluginManager();
         
@@ -119,7 +120,6 @@ public class TurretsPlugin extends JavaPlugin{
         POST_MATERIALS.add(Material.NETHER_FENCE);
         POST_MATERIALS.add(Material.COBBLE_WALL);
         
-        
         //load turrets
         try{
             loadAndSpawnTurrets();
@@ -127,9 +127,15 @@ public class TurretsPlugin extends JavaPlugin{
         }catch(IOException e){
             logger.log(Level.SEVERE,"Failed to load turrets",e);
         }
-        
         logger.info("Total number of turrets: "+turrets.size());
         
+        //activate metrics
+        try {
+            BukkitMetrics metrics = new BukkitMetrics(this);
+            metrics.start();
+        } catch (IOException e) {
+            // Failed to submit the stats :-(
+        }
     }
 
 	@Override
@@ -384,11 +390,7 @@ public class TurretsPlugin extends JavaPlugin{
 		return ownerReturn;
 	}
 	
-	
-	
 	public void reloadPlugin(int verbose) {
-		globalLogger = getLogger();
-        Logger logger = getLogger();
 		try{
             despawnAndSaveTurrets();
             logger.info("Despawned and saved turrets.");
