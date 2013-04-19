@@ -4,6 +4,7 @@ main: me.azazad.turrets.TurretsPlugin
 version: 0.2.5
 author: wristdirect
 database: false
+softdepend: [ Factions ]
 
 # Commands
 commands:

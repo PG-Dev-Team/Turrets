@@ -8,32 +8,33 @@ import me.azazad.turrets.Turret;
 import me.azazad.turrets.TurretAmmoBox;
 import me.azazad.turrets.TurretOwner;
 import me.azazad.turrets.TurretShooter;
+import me.azazad.turrets.TurretsPlugin;
 import me.azazad.turrets.targeting.TargetAssessment;
 import me.azazad.turrets.targeting.TargetAssessor;
 import me.azazad.turrets.upgrade.UpgradeTier;
 import me.azazad.util.RandomUtils;
-import net.minecraft.server.v1_4_6.DamageSource;
-import net.minecraft.server.v1_4_6.EntityArrow;
-import net.minecraft.server.v1_4_6.EntityEgg;
-import net.minecraft.server.v1_4_6.EntityHuman;
-import net.minecraft.server.v1_4_6.EntityItem;
-import net.minecraft.server.v1_4_6.EntityPotion;
-import net.minecraft.server.v1_4_6.EntitySmallFireball;
-import net.minecraft.server.v1_4_6.EntitySnowball;
-import net.minecraft.server.v1_4_6.EntityThrownExpBottle;
-import net.minecraft.server.v1_4_6.ItemMonsterEgg;
-import net.minecraft.server.v1_4_6.ItemPotion;
-import net.minecraft.server.v1_4_6.Vec3D;
+import net.minecraft.server.v1_5_R2.DamageSource;
+import net.minecraft.server.v1_5_R2.EntityArrow;
+import net.minecraft.server.v1_5_R2.EntityEgg;
+import net.minecraft.server.v1_5_R2.EntityHuman;
+import net.minecraft.server.v1_5_R2.EntityItem;
+import net.minecraft.server.v1_5_R2.EntityPotion;
+import net.minecraft.server.v1_5_R2.EntitySmallFireball;
+import net.minecraft.server.v1_5_R2.EntitySnowball;
+import net.minecraft.server.v1_5_R2.EntityThrownExpBottle;
+import net.minecraft.server.v1_5_R2.ItemMonsterEgg;
+import net.minecraft.server.v1_5_R2.ItemPotion;
+import net.minecraft.server.v1_5_R2.Vec3D;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Chest;
-import org.bukkit.craftbukkit.v1_4_6.CraftWorld;
-import org.bukkit.craftbukkit.v1_4_6.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_4_6.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_4_6.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_5_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_5_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -42,8 +43,15 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.Potion;
 import org.bukkit.util.NumberConversions;
 
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.struct.Relation;
+
 @SuppressWarnings("unused")
-public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMinecart{
+public class EntityRotatingTurret extends net.minecraft.server.v1_5_R2.EntityMinecartRideable {
+    
     private static final double REBOUND = 0.1;
     private static final double ITEM_SPAWN_DISTANCE = 1.2;
     
@@ -75,8 +83,8 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMine
         return turret;
     }
     
-    public boolean damageEntity(DamageSource damageSource,int damage){
-        net.minecraft.server.v1_4_6.Entity nmsDamager = damageSource.getEntity();
+    public boolean damageEntity(DamageSource damageSource, int damage) {
+        net.minecraft.server.v1_5_R2.Entity nmsDamager = damageSource.getEntity();
         
         if(nmsDamager != null){
             Entity damager = nmsDamager.getBukkitEntity();
@@ -92,17 +100,17 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMine
     }
     
     @Override
-    public void j_(){
-        if(this.j() > 0){
-            this.h(this.j() - 1);
+    public void l_() {
+        if (j() > 0) {
+            i(j() - 1);
         }
         
         if(this.getDamage() > 0){
             this.setDamage(this.getDamage() - 1);
         }
         
-        if(this.locY < -64.0D){
-            this.C();
+        if (this.locY < -64.0D) {
+            B();
         }
         
         this.lastX = this.locX;
@@ -125,108 +133,108 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMine
         double range = upgradeTier.getRange();
         float accuracy = upgradeTier.getAccuracy();
         boolean lockedOn = false;
-        if(this.getTurret().getShooter()!=null && this.getTurret().getShooter().getPlayer()==null) this.getTurret().detachShooter();
-        if(this.getTurret().getIsActive()) {
-	        if(!this.getTurret().getPlayerControl()) {
-//        	if(true) {
-	        	//If not currently targeting an entity, find a suitable one
-        		if(target != null) {
-        			if(targetSearchCooldown == 0) {
-        				if(target instanceof LivingEntity) {
-	        				List<LivingEntity> curTarget = new ArrayList<LivingEntity>();
-	        				curTarget.add((LivingEntity)target);
-	        				filterTargets(curTarget);
-	        				if (curTarget.size()>0) target = curTarget.get(0);
-	        				else target=null;
-        				}
-        			}
-        		}
-		        if(target == null){
-		            if(targetSearchCooldown == 0){
-		                Entity foundTarget = findTarget(range);
-		                
-		                if(foundTarget != null){
-		                    target = foundTarget;
-		                }else{
-		                    targetSearchCooldown = targetSearchInterval;
-		                }
-		            }
-		        }
-		        
-		        if(targetSearchCooldown > 0){
-		            targetSearchCooldown--;
-		        }
-		        
-		        lockedOn = false;
-		        
-		        //Track target
-		        if(target != null){
-		            net.minecraft.server.v1_4_6.Entity nmsTarget = ((CraftEntity)target).getHandle();
-		            
-		            if(canSee(nmsTarget)){
-		                net.minecraft.server.v1_4_6.World targetWorld = nmsTarget.world;
-		                double x = nmsTarget.locX;
-		                double y = nmsTarget.locY + nmsTarget.getHeadHeight();
-		                double z = nmsTarget.locZ;
-		                
-		                if(targetWorld == this.world && !target.isDead()){
-		                    double dx = x - pivotX;
-		                    double dy = y - pivotY;
-		                    double dz = z - pivotZ;
-		                    double distanceSquared = dx * dx + dy * dy + dz * dz;
-		                    
-		                    
-		                    
-		                    if(distanceSquared <= range * range){
-		                        lookAt(x,y,z);
-		                        lockedOn = true;
-		                    }else{
-		                        target = null;
-		                    }
-		                }else{
-		                    target = null;
-		                }
-		            }else{
-		                target = null;
-		            }
-		        }
-	        }
-	        else {
-	        	if(turretLookMatchShooterCD  == 0) {
-		        	double dist = 4.0;
-		        	Location ploc = this.getTurret().getShooter().getPlayer().getEyeLocation();
-		        	float plocPitch = ploc.getPitch();
-		        	float plocYaw = ploc.getYaw();
-		        	double yawInRad = ((double)plocYaw)*Math.PI/180;
-		        	double pitchP90inRad = ((double)plocPitch+90)*Math.PI/180;
-		        	double plookX = ploc.getX() + dist*Math.sin((double)(-yawInRad+2*Math.PI))*Math.sin(pitchP90inRad);
-		        	double plookY = ploc.getY() + dist*Math.cos(pitchP90inRad);
-		        	double plookZ = ploc.getZ() + dist*Math.cos(yawInRad)*Math.sin(pitchP90inRad);
-		        	//Bukkit.broadcastMessage("x = " + plookX + ", y = " + plookY + ", z = " + plookZ);
-		        	lookAt(plookX,plookY,plookZ);
-		        	turretLookMatchShooterCD = 0;
-	        	} else turretLookMatchShooterCD--;
-	        }
-	        
-	        
-	        this.b(this.yaw,this.pitch);
-	        this.motY = 0;
-	        //**************************Firing check*******************************/
-		    if(this.getTurret().getPlayerControl()) {
-		    	//check if shooter tried to shoot since last cooldown
-		    	if(this.getTurret().getShooter().didShooterClick() && firingCooldown == 0) {
-		    		fireItemStack(accuracy);
-		    		firingCooldown = firingInterval*4/5;
-		    		this.getTurret().getShooter().setClickedFlag(false);
-		    	}
-		    } else {
-		    	//Fire item if locked onto target
-	        	if(lockedOn && firingCooldown == 0){
-		            fireItemStack(accuracy);
-		            firingCooldown = firingInterval;
-		        }
-	    	}
-    	}
+        if (this.getTurret().getShooter() != null && this.getTurret().getShooter().getPlayer() == null)
+            this.getTurret().detachShooter();
+        if (this.getTurret().getIsActive()) {
+            if (!this.getTurret().getPlayerControl()) {
+                // if(true) {
+                // If not currently targeting an entity, find a suitable one
+                if (target != null) {
+                    if (targetSearchCooldown == 0) {
+                        if (target instanceof LivingEntity) {
+                            List<LivingEntity> curTarget = new ArrayList<LivingEntity>();
+                            curTarget.add((LivingEntity) target);
+                            filterTargets(curTarget);
+                            if (curTarget.size() > 0)
+                                target = curTarget.get(0);
+                            else
+                                target = null;
+                        }
+                    }
+                }
+                if (target == null) {
+                    if (targetSearchCooldown == 0) {
+                        Entity foundTarget = findTarget(range);
+                        
+                        if (foundTarget != null) {
+                            target = foundTarget;
+                        } else {
+                            targetSearchCooldown = targetSearchInterval;
+                        }
+                    }
+                }
+                
+                if (targetSearchCooldown > 0) {
+                    targetSearchCooldown--;
+                }
+                
+                lockedOn = false;
+                
+                // Track target
+                if (target != null) {
+                    net.minecraft.server.v1_5_R2.Entity nmsTarget = ((CraftEntity) target).getHandle();
+                    
+                    if (canSee(nmsTarget)) {
+                        net.minecraft.server.v1_5_R2.World targetWorld = nmsTarget.world;
+                        double x = nmsTarget.locX;
+                        double y = nmsTarget.locY + nmsTarget.getHeadHeight();
+                        double z = nmsTarget.locZ;
+                        
+                        if (targetWorld == this.world && !target.isDead()) {
+                            double dx = x - pivotX;
+                            double dy = y - pivotY;
+                            double dz = z - pivotZ;
+                            double distanceSquared = dx * dx + dy * dy + dz * dz;
+                            
+                            if (distanceSquared <= range * range) {
+                                lookAt(x, y, z);
+                                lockedOn = true;
+                            } else {
+                                target = null;
+                            }
+                        } else {
+                            target = null;
+                        }
+                    } else {
+                        target = null;
+                    }
+                }
+            } else {
+                if (turretLookMatchShooterCD == 0) {
+                    double dist = 4.0;
+                    Location ploc = this.getTurret().getShooter().getPlayer().getEyeLocation();
+                    float plocPitch = ploc.getPitch();
+                    float plocYaw = ploc.getYaw();
+                    double yawInRad = ((double) plocYaw) * Math.PI / 180;
+                    double pitchP90inRad = ((double) plocPitch + 90) * Math.PI / 180;
+                    double plookX = ploc.getX() + dist * Math.sin((double) (-yawInRad + 2 * Math.PI)) * Math.sin(pitchP90inRad);
+                    double plookY = ploc.getY() + dist * Math.cos(pitchP90inRad);
+                    double plookZ = ploc.getZ() + dist * Math.cos(yawInRad) * Math.sin(pitchP90inRad);
+                    // Bukkit.broadcastMessage("x = " + plookX + ", y = " + plookY + ", z = " + plookZ);
+                    lookAt(plookX, plookY, plookZ);
+                    turretLookMatchShooterCD = 0;
+                } else
+                    turretLookMatchShooterCD--;
+            }
+            
+            this.b(this.yaw, this.pitch);
+            this.motY = 0;
+            // **************************Firing check*******************************/
+            if (this.getTurret().getPlayerControl()) {
+                // check if shooter tried to shoot since last cooldown
+                if (this.getTurret().getShooter().didShooterClick() && firingCooldown == 0) {
+                    fireItemStack(accuracy);
+                    firingCooldown = firingInterval * 4 / 5;
+                    this.getTurret().getShooter().setClickedFlag(false);
+                }
+            } else {
+                // Fire item if locked onto target
+                if (lockedOn && firingCooldown == 0) {
+                    fireItemStack(accuracy);
+                    firingCooldown = firingInterval;
+                }
+            }
+        }
         
         if(firingCooldown > 0){
             firingCooldown--;
@@ -242,8 +250,8 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMine
     }
     
     @Override
-    public boolean a(EntityHuman entityhuman) {
-    	if (this.type == 0) {
+    public boolean a_(EntityHuman entityhuman) {
+        if (this.getType() == 0) {
             if (this.passenger != null && this.passenger instanceof EntityHuman && this.passenger != entityhuman) {
                 return true;
             }
@@ -289,12 +297,12 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMine
     }
     
     @SuppressWarnings("unchecked")
-	public Entity findTarget(double range){
-        List<net.minecraft.server.v1_4_6.Entity> nmsEntities = world.getEntities(this,this.boundingBox.grow(range,range,range));
+	public Entity findTarget(double range) {
+        List<net.minecraft.server.v1_5_R2.Entity> nmsEntities = world.getEntities(this, this.boundingBox.grow(range, range, range));
         List<LivingEntity> targets = new ArrayList<LivingEntity>();
         double rangeSquared = range * range;
-        for(net.minecraft.server.v1_4_6.Entity nmsEntity : nmsEntities){
-            if(nmsEntity == this){
+        for (net.minecraft.server.v1_5_R2.Entity nmsEntity : nmsEntities) {
+            if (nmsEntity == this) {
                 continue;
             }
             
@@ -317,9 +325,9 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMine
         
         filterTargets(targets);
         
-        while(!targets.isEmpty()){
-            LivingEntity possibleTarget = RandomUtils.randomElement(targets,random);
-            net.minecraft.server.v1_4_6.Entity nmsPossibleTarget = ((CraftEntity)possibleTarget).getHandle();
+        while (!targets.isEmpty()) {
+            LivingEntity possibleTarget = RandomUtils.randomElement(targets, random);
+            net.minecraft.server.v1_5_R2.Entity nmsPossibleTarget = ((CraftEntity) possibleTarget).getHandle();
             
             if(canSee(nmsPossibleTarget)){
                 return possibleTarget;
@@ -330,48 +338,58 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMine
         
         return null;
     }
+    
     private void filterTargets(List<LivingEntity> targets) {
         Iterator<LivingEntity> it = targets.iterator();
         while(it.hasNext()) {
             LivingEntity mob = it.next();
             TargetAssessment assessment = assessTarget(mob);
-            if(assessment == TargetAssessment.EITHER) {
-            	if(mob instanceof Player) {
-            		Player playerTarget = (Player) mob;
-            		boolean isHostileTarget;
-            		TurretOwner turretOwner = this.getTurret().getTurretOwner();
-            		if(turretOwner.isPvpEnabled()) {
-            			if(turretOwner.isUsingBlacklist()) {
-            				if(turretOwner.isPlayerInBlacklist(playerTarget.getName().toLowerCase())) {
-            					if(this.getTurret().getPlugin().globalWhitelist.contains(playerTarget.getName().toLowerCase())) {
-            						isHostileTarget = false;
-            					}
-            					else isHostileTarget = true;
-            				}
-            				else isHostileTarget = false;
-            			}
-            			else {
-            				if(turretOwner.isPlayerInWhitelist(playerTarget.getName().toLowerCase())) isHostileTarget = false;
-            				else {
-            					if(this.getTurret().getPlugin().globalWhitelist.contains(playerTarget.getName().toLowerCase())) {
-            						isHostileTarget = false;
-            					}
-            					else isHostileTarget = true;
-            				}
-            			}
-            		}else isHostileTarget = false;
-	            	if(playerTarget.getName().equalsIgnoreCase(this.turret.getOwnerName())) isHostileTarget = false;
-	            	if(isHostileTarget) assessment = TargetAssessment.HOSTILE;
-	            	else assessment = TargetAssessment.NOT_HOSTILE;
-            	}
-            	else assessment = TargetAssessment.NOT_HOSTILE;
+            if (assessment == TargetAssessment.EITHER) {
+                if (mob instanceof Player) {
+                    Player playerTarget = (Player) mob;
+                    boolean isHostileTarget;
+                    TurretOwner turretOwner = this.getTurret().getTurretOwner();
+                    if (turretOwner.isPvpEnabled()) {
+                        if (TurretsPlugin.hasFactions()) {
+                            isHostileTarget = factionsCheck(turretOwner.getOnlinePlayer(), playerTarget);
+                        } else {
+                            if (turretOwner.isUsingBlacklist()) {
+                                if (turretOwner.isPlayerInBlacklist(playerTarget.getName().toLowerCase())) {
+                                    if (this.getTurret().getPlugin().globalWhitelist.contains(playerTarget.getName().toLowerCase())) {
+                                        isHostileTarget = false;
+                                    } else
+                                        isHostileTarget = true;
+                                } else
+                                    isHostileTarget = false;
+                            } else {
+                                if (turretOwner.isPlayerInWhitelist(playerTarget.getName().toLowerCase()))
+                                    isHostileTarget = false;
+                                else {
+                                    if (this.getTurret().getPlugin().globalWhitelist.contains(playerTarget.getName().toLowerCase())) {
+                                        isHostileTarget = false;
+                                    } else
+                                        isHostileTarget = true;
+                                }
+                            }
+                        }
+                    } else
+                        isHostileTarget = false;
+                    if (playerTarget.getName().equalsIgnoreCase(this.turret.getOwnerName()))
+                        isHostileTarget = false;
+                    if (isHostileTarget)
+                        assessment = TargetAssessment.HOSTILE;
+                    else
+                        assessment = TargetAssessment.NOT_HOSTILE;
+                } else
+                    assessment = TargetAssessment.NOT_HOSTILE;
             }
             if(assessment != TargetAssessment.HOSTILE){
                 it.remove();
             }
         }
     }
-    private TargetAssessment assessTarget(LivingEntity mob){
+    
+    private TargetAssessment assessTarget(LivingEntity mob) {
         TargetAssessment overallAssessment = TargetAssessment.MEH;
         
         for(TargetAssessor assessor : turret.getTargetAssessors()){
@@ -467,11 +485,11 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMine
                     break;
                     
                 case POTION:
-                    if(Potion.fromItemStack(itemStack).isSplash()){
-                    	ItemPotion nmsItemPotion = new net.minecraft.server.v1_4_6.ItemPotion(itemStack.getDurability());
-                    	net.minecraft.server.v1_4_6.ItemStack nmsItemStack = new net.minecraft.server.v1_4_6.ItemStack(nmsItemPotion);
-                        EntityPotion entityPotion = new EntityPotion(world,itemX,itemY,itemZ,nmsItemStack);
-                        entityPotion.shoot(factorX,factorY,factorZ,1.375f,accuracy * 0.5f);
+                    if (Potion.fromItemStack(itemStack).isSplash()) {
+                        ItemPotion nmsItemPotion = new net.minecraft.server.v1_5_R2.ItemPotion(itemStack.getDurability());
+                        net.minecraft.server.v1_5_R2.ItemStack nmsItemStack = new net.minecraft.server.v1_5_R2.ItemStack(nmsItemPotion);
+                        EntityPotion entityPotion = new EntityPotion(world, itemX, itemY, itemZ, nmsItemStack);
+                        entityPotion.shoot(factorX, factorY, factorZ, 1.375f, accuracy * 0.5f);
                         world.addEntity(entityPotion);
                         world.triggerEffect(1002,blockX,blockY,blockZ,0);
                     }else{
@@ -538,9 +556,9 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMine
         world.triggerEffect(1000,blockX,blockY,blockZ,0);
     }
     
-    //TODO: cache results of this method
-    private boolean canSee(net.minecraft.server.v1_4_6.Entity nmsEntity){
-        return this.world.rayTrace(Vec3D.a(this.locX,this.locY + this.getHeadHeight(),this.locZ),Vec3D.a(nmsEntity.locX,nmsEntity.locY + nmsEntity.getHeadHeight(),nmsEntity.locZ),false,false) == null;
+    // TODO: cache results of this method
+    private boolean canSee(net.minecraft.server.v1_5_R2.Entity nmsEntity) {
+        return this.world.rayTrace(Vec3D.a(this.locX, this.locY + this.getHeadHeight(), this.locZ), Vec3D.a(nmsEntity.locX, nmsEntity.locY + nmsEntity.getHeadHeight(), nmsEntity.locZ), false, false) == null;
     }
     
     public float getPitch() {
@@ -556,6 +574,45 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_4_6.EntityMine
     }
     
     public void setYaw(float yaw) {
-    	this.yaw = yaw;
+        this.yaw = yaw;
+    }
+    
+    public Boolean factionsCheck(Player attack, Player defend) {// isHostile
+        FPlayer attacker = (FPlayer) FPlayers.i.get((Player) attack);
+        FPlayer defender = (FPlayer) FPlayers.i.get((Player) defend);
+        if (attacker != null && defender != null) {
+            Faction defendFaction = defender.getFaction();
+            Faction attackFaction = attacker.getFaction();
+            if (attackFaction.isNone()) { // owner is not in a faction.
+                if (Conf.disablePVPForFactionlessPlayers) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            if (defendFaction.isNone()) { // owner is not in a faction.
+                if (Conf.disablePVPForFactionlessPlayers) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            // both have factions - test relationship
+            Relation relation = defendFaction.getRelationTo(attackFaction);
+            switch (relation) {
+                //case LEADER:
+                //case OFFICER:
+                case MEMBER:
+                case ALLY:
+                /*case TRUCE:
+                    return false;*/
+                case NEUTRAL:
+                case ENEMY:
+                    return true;
+                default:
+                    return true;
+            }
+        }
+        return true;
     }
 }
