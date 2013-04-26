@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import me.azazad.bukkit.util.FactionsUtil;
 import me.azazad.turrets.Turret;
 import me.azazad.turrets.TurretAmmoBox;
 import me.azazad.turrets.TurretOwner;
@@ -43,11 +44,6 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.Potion;
 import org.bukkit.util.NumberConversions;
 
-import com.massivecraft.factions.Conf;
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
-import com.massivecraft.factions.Faction;
-import com.massivecraft.factions.struct.Relation;
 
 @SuppressWarnings("unused")
 public class EntityRotatingTurret extends net.minecraft.server.v1_5_R2.EntityMinecartRideable {
@@ -351,7 +347,7 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_5_R2.EntityMin
                     TurretOwner turretOwner = this.getTurret().getTurretOwner();
                     if (turretOwner.isPvpEnabled()) {
                         if (TurretsPlugin.hasFactions()) {
-                            isHostileTarget = factionsCheck(turretOwner.getOnlinePlayer(), playerTarget);
+                            isHostileTarget = FactionsUtil.factionsCheck(turretOwner.getOnlinePlayer(), playerTarget);
                         } else {
                             if (turretOwner.isUsingBlacklist()) {
                                 if (turretOwner.isPlayerInBlacklist(playerTarget.getName().toLowerCase())) {
@@ -577,42 +573,4 @@ public class EntityRotatingTurret extends net.minecraft.server.v1_5_R2.EntityMin
         this.yaw = yaw;
     }
     
-    public Boolean factionsCheck(Player attack, Player defend) {// isHostile
-        FPlayer attacker = (FPlayer) FPlayers.i.get((Player) attack);
-        FPlayer defender = (FPlayer) FPlayers.i.get((Player) defend);
-        if (attacker != null && defender != null) {
-            Faction defendFaction = defender.getFaction();
-            Faction attackFaction = attacker.getFaction();
-            if (attackFaction.isNone()) { // owner is not in a faction.
-                if (Conf.disablePVPForFactionlessPlayers) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-            if (defendFaction.isNone()) { // owner is not in a faction.
-                if (Conf.disablePVPForFactionlessPlayers) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-            // both have factions - test relationship
-            Relation relation = defendFaction.getRelationTo(attackFaction);
-            switch (relation) {
-                //case LEADER:
-                //case OFFICER:
-                case MEMBER:
-                case ALLY:
-                /*case TRUCE:
-                    return false;*/
-                case NEUTRAL:
-                case ENEMY:
-                    return true;
-                default:
-                    return true;
-            }
-        }
-        return true;
-    }
 }
